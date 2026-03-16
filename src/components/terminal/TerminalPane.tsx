@@ -5,6 +5,7 @@ import { WebLinksAddon } from '@xterm/addon-web-links';
 import '@xterm/xterm/css/xterm.css';
 import type { Tab } from '../../store/useTabStore';
 import { useTabStore } from '../../store/useTabStore';
+import { useSettingsStore, terminalThemes } from '../../store/useSettingsStore';
 
 interface Props {
   tab: Tab;
@@ -19,31 +20,12 @@ export function TerminalPane({ tab }: Props) {
   useEffect(() => {
     if (!containerRef.current) return;
 
+    const { theme, fontSize, fontFamily } = useSettingsStore.getState();
+
     const terminal = new Terminal({
-      theme: {
-        background: '#1e1e1e',
-        foreground: '#d4d4d4',
-        cursor: '#aeafad',
-        selectionBackground: '#264f78',
-        black: '#1e1e1e',
-        red: '#f44747',
-        green: '#6a9955',
-        yellow: '#d7ba7d',
-        blue: '#569cd6',
-        magenta: '#c586c0',
-        cyan: '#4ec9b0',
-        white: '#d4d4d4',
-        brightBlack: '#808080',
-        brightRed: '#f44747',
-        brightGreen: '#6a9955',
-        brightYellow: '#d7ba7d',
-        brightBlue: '#569cd6',
-        brightMagenta: '#c586c0',
-        brightCyan: '#4ec9b0',
-        brightWhite: '#e5e5e5',
-      },
-      fontFamily: "'Cascadia Code', 'Consolas', monospace",
-      fontSize: 14,
+      theme: terminalThemes[theme],
+      fontFamily,
+      fontSize,
       scrollback: 10000,
       cursorBlink: true,
       cursorStyle: 'block',
@@ -61,6 +43,17 @@ export function TerminalPane({ tab }: Props) {
 
     terminalRef.current = terminal;
     fitAddonRef.current = fitAddon;
+
+    // Copy on select
+    const selectionDisposable = terminal.onSelectionChange(() => {
+      const { copyOnSelect: copyEnabled } = useSettingsStore.getState();
+      if (copyEnabled) {
+        const selection = terminal.getSelection();
+        if (selection) {
+          navigator.clipboard.writeText(selection).catch(() => {});
+        }
+      }
+    });
 
     // Resize observer
     const resizeObserver = new ResizeObserver(() => {
@@ -130,8 +123,18 @@ export function TerminalPane({ tab }: Props) {
       cleanupConnection = cleanup;
     });
 
+    // Listen for settings changes (theme, font, etc.)
+    const unsubSettings = useSettingsStore.subscribe((state) => {
+      terminal.options.theme = terminalThemes[state.theme];
+      terminal.options.fontSize = state.fontSize;
+      terminal.options.fontFamily = state.fontFamily;
+      try { fitAddon.fit(); } catch { /* ignore */ }
+    });
+
     return () => {
       resizeObserver.disconnect();
+      selectionDisposable.dispose();
+      unsubSettings();
       cleanupConnection?.();
       terminal.dispose();
       if (tab.connectionId) {

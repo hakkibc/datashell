@@ -3,12 +3,14 @@ import { useSessionStore } from '../../store/useSessionStore';
 import { useTabStore } from '../../store/useTabStore';
 import { SessionManager } from '../sessions/SessionManager';
 import { SessionForm } from '../sessions/SessionForm';
-import { Search, Plus, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { SettingsPanel } from '../settings/SettingsPanel';
+import { Search, Plus, Settings, ChevronLeft, Menu } from 'lucide-react';
 import type { Session } from '../../types/electron';
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [editSession, setEditSession] = useState<Session | null>(null);
   const { searchQuery, setSearchQuery, fetchAll } = useSessionStore();
 
@@ -72,7 +74,7 @@ export function Sidebar() {
           <button className="btn btn--primary" style={{ flex: 1 }} onClick={handleNewSession}>
             <Plus size={14} /> Yeni Session
           </button>
-          <button className="btn--icon">
+          <button className="btn--icon" onClick={() => setShowSettings(true)}>
             <Settings size={16} />
           </button>
         </div>
@@ -80,16 +82,11 @@ export function Sidebar() {
 
       {collapsed && (
         <button
-          className="btn--icon"
-          style={{
-            position: 'absolute',
-            left: 4,
-            top: 'calc(var(--titlebar-height) + 4px)',
-            zIndex: 10,
-          }}
+          className="sidebar-toggle"
           onClick={() => setCollapsed(false)}
+          title="Menüyü aç"
         >
-          <ChevronRight size={16} />
+          <Menu size={18} />
         </button>
       )}
 
@@ -98,6 +95,10 @@ export function Sidebar() {
           session={editSession}
           onClose={() => setShowForm(false)}
         />
+      )}
+
+      {showSettings && (
+        <SettingsPanel onClose={() => setShowSettings(false)} />
       )}
     </>
   );

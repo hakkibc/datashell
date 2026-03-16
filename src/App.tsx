@@ -1,8 +1,10 @@
+import { useEffect } from 'react';
 import { Sidebar } from './components/layout/Sidebar';
 import { TabBar } from './components/layout/TabBar';
 import { StatusBar } from './components/layout/StatusBar';
 import { TerminalTab } from './components/terminal/TerminalTab';
 import { useTabStore } from './store/useTabStore';
+import { useSettingsStore, appThemeClass } from './store/useSettingsStore';
 import { Minus, Square, X, Terminal } from 'lucide-react';
 
 function TitleBar() {
@@ -33,6 +35,16 @@ function TitleBar() {
 function App() {
   const { tabs, activeTabId } = useTabStore();
   const activeTab = tabs.find((t) => t.id === activeTabId);
+  const theme = useSettingsStore((s) => s.theme);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    // Remove all theme classes
+    root.classList.remove('theme-light', 'theme-monokai', 'theme-solarized', 'theme-nord');
+    // Add the active theme class (dark has no class)
+    const cls = appThemeClass[theme];
+    if (cls) root.classList.add(cls);
+  }, [theme]);
 
   return (
     <div className="app-container">
