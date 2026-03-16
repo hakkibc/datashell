@@ -29,7 +29,6 @@ export function TerminalPane({ tab }: Props) {
       scrollback: 10000,
       cursorBlink: true,
       cursorStyle: 'block',
-      allowProposedApi: true,
     });
 
     const fitAddon = new FitAddon();
@@ -40,6 +39,7 @@ export function TerminalPane({ tab }: Props) {
 
     terminal.open(containerRef.current);
     fitAddon.fit();
+    terminal.focus();
 
     terminalRef.current = terminal;
     fitAddonRef.current = fitAddon;
@@ -55,27 +55,100 @@ export function TerminalPane({ tab }: Props) {
       }
     });
 
-    // Right-click paste
-    const handleContextMenu = (e: MouseEvent) => {
-      e.preventDefault();
+    // Paste handler (reads clipboard and sends to SSH)
+    const doPaste = () => {
       navigator.clipboard.readText().then((text) => {
-        if (text && tab.connectionId) {
-          window.electronAPI?.ssh.sendInput(tab.connectionId, text);
+        if (text) {
+          const currentTab = useTabStore.getState().tabs.find((t) => t.id === tab.id);
+          const connId = currentTab?.connectionId;
+          if (connId) {
+            window.electronAPI?.ssh.sendInput(connId, text);
+          }
         }
       }).catch(() => {});
     };
+
+    // Right-click paste
+    const handleContextMenu = (e: MouseEvent) => {
+      const { pasteMethod } = useSettingsStore.getState();
+      if (pasteMethod === 'right-click') {
+        e.preventDefault();
+        doPaste();
+      }
+    };
     containerRef.current.addEventListener('contextmenu', handleContextMenu);
 
-    // Resize observer
-    const resizeObserver = new ResizeObserver(() => {
-      try {
-        fitAddon.fit();
-        if (tab.connectionId) {
-          window.electronAPI?.ssh.resize(tab.connectionId, terminal.cols, terminal.rows);
-        }
-      } catch {
-        // Ignore resize errors during cleanup
+    // Middle-click paste
+    const handleMouseDown = (e: MouseEvent) => {
+      const { pasteMethod } = useSettingsStore.getState();
+      if (pasteMethod === 'middle-click' && e.button === 1) {
+        e.preventDefault();
+        doPaste();
       }
+    };
+    containerRef.current.addEventListener('mousedown', handleMouseDown);
+
+    // Ctrl+V paste
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const { pasteMethod } = useSettingsStore.getState();
+      if (pasteMethod === 'ctrl-v' && e.ctrlKey && e.key === 'v') {
+        e.preventDefault();
+        doPaste();
+      }
+    };
+    containerRef.current.addEventListener('keydown', handleKeyDown);
+
+    // Resize observer — debounced
+    // Track last SENT cols/rows to SSH to avoid redundant resize signals
+    let lastSentCols = terminal.cols;
+    let lastSentRows = terminal.rows;
+    let wasHidden = false;
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      const { width, height } = entry.contentRect;
+
+      // Container hidden (display: none) — just mark it and skip
+      if (width === 0 || height === 0) {
+        wasHidden = true;
+        return;
+      }
+
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        try {
+          fitAddon.fit();
+
+          // If becoming visible after being hidden, only fit the terminal UI
+          // Do NOT send ssh.resize — the SSH session size hasn't changed
+          if (wasHidden) {
+            wasHidden = false;
+            // Only send resize if dimensions actually differ from what SSH knows
+            if (terminal.cols !== lastSentCols || terminal.rows !== lastSentRows) {
+              lastSentCols = terminal.cols;
+              lastSentRows = terminal.rows;
+              const currentTab = useTabStore.getState().tabs.find((t) => t.id === tab.id);
+              if (currentTab?.connectionId) {
+                window.electronAPI?.ssh.resize(currentTab.connectionId, terminal.cols, terminal.rows);
+              }
+            }
+            return;
+          }
+
+          // Real resize (user dragged window/sidebar) — always notify SSH
+          if (terminal.cols !== lastSentCols || terminal.rows !== lastSentRows) {
+            lastSentCols = terminal.cols;
+            lastSentRows = terminal.rows;
+            const currentTab = useTabStore.getState().tabs.find((t) => t.id === tab.id);
+            if (currentTab?.connectionId) {
+              window.electronAPI?.ssh.resize(currentTab.connectionId, terminal.cols, terminal.rows);
+            }
+          }
+        } catch {
+          // Ignore resize errors during cleanup
+        }
+      }, 150);
     });
     resizeObserver.observe(containerRef.current);
 
@@ -92,6 +165,9 @@ export function TerminalPane({ tab }: Props) {
           cols: terminal.cols,
           rows: terminal.rows,
         });
+
+        lastSentCols = terminal.cols;
+        lastSentRows = terminal.rows;
 
         // Data from SSH → terminal
         const removeDataListener = window.electronAPI.ssh.onData(connectionId, (data) => {
@@ -145,16 +221,17 @@ export function TerminalPane({ tab }: Props) {
     const containerEl = containerRef.current;
     return () => {
       containerEl?.removeEventListener('contextmenu', handleContextMenu);
+      containerEl?.removeEventListener('mousedown', handleMouseDown);
+      containerEl?.removeEventListener('keydown', handleKeyDown);
+      if (resizeTimer) clearTimeout(resizeTimer);
       resizeObserver.disconnect();
       selectionDisposable.dispose();
       unsubSettings();
       cleanupConnection?.();
       terminal.dispose();
-      if (tab.connectionId) {
-        window.electronAPI?.ssh.disconnect(tab.connectionId);
-      }
+      // Do NOT disconnect SSH — tab close handlers in TabBar handle that
     };
-  }, [tab.sessionId, tab.id]); // Reconnect when status resets
+  }, [tab.sessionId, tab.id]);
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />;
 }

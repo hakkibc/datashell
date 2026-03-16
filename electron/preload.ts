@@ -80,8 +80,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('tunnel:listForConnection', connectionId),
   },
 
+  // Saved tunnels
+  savedTunnels: {
+    getAll: () => ipcRenderer.invoke('savedTunnels:getAll'),
+    create: (data: unknown) => ipcRenderer.invoke('savedTunnels:create', data),
+    update: (id: string, data: unknown) => ipcRenderer.invoke('savedTunnels:update', id, data),
+    delete: (id: string) => ipcRenderer.invoke('savedTunnels:delete', id),
+  },
+
   // Local filesystem
   local: {
+    homedir: () => ipcRenderer.invoke('local:homedir'),
     readdir: (dirPath: string) => ipcRenderer.invoke('local:readdir', dirPath),
     selectDirectory: () => ipcRenderer.invoke('local:selectDirectory'),
     selectFile: () => ipcRenderer.invoke('local:selectFile'),

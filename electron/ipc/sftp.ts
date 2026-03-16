@@ -2,6 +2,7 @@ import { ipcMain, BrowserWindow } from 'electron';
 import { Client, SFTPWrapper } from 'ssh2';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 interface SFTPSession {
   sftp: SFTPWrapper;
@@ -29,6 +30,11 @@ export function setSFTPClient(connectionId: string, client: Client) {
 }
 
 export function registerSFTPHandlers() {
+  // Get user home directory
+  ipcMain.handle('local:homedir', () => {
+    return os.homedir();
+  });
+
   // Local filesystem listing
   ipcMain.handle('local:readdir', async (_event, dirPath: string) => {
     try {
@@ -238,40 +244,43 @@ export function registerSFTPHandlers() {
     const transferState = { cancelled: false };
     activeTransfers.set(transferId, transferState);
 
-    return new Promise<string>((resolve, reject) => {
+    // Get file size first, then start streaming in background
+    const total = await new Promise<number>((resolve, reject) => {
       session.sftp.stat(remotePath, (err, stats) => {
         if (err) return reject(err);
-
-        const total = stats.size;
-        let transferred = 0;
-        const win = getMainWindow();
-
-        const readStream = session.sftp.createReadStream(remotePath);
-        const dir = path.dirname(localPath);
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-        const writeStream = fs.createWriteStream(localPath);
-
-        readStream.on('data', (chunk: Buffer) => {
-          if (transferState.cancelled) {
-            readStream.destroy();
-            writeStream.destroy();
-            return;
-          }
-          transferred += chunk.length;
-          if (win) {
-            win.webContents.send(`sftp:progress:${transferId}`, {
-              bytes: transferred,
-              total,
-              percentage: Math.round((transferred / total) * 100),
-            });
-          }
-        });
-
-        readStream.pipe(writeStream);
-        writeStream.on('finish', () => resolve(transferId));
-        readStream.on('error', reject);
+        resolve(stats.size);
       });
     });
+
+    // Start streaming in background (don't await)
+    let transferred = 0;
+    const win = getMainWindow();
+
+    const readStream = session.sftp.createReadStream(remotePath);
+    const dir = path.dirname(localPath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const writeStream = fs.createWriteStream(localPath);
+
+    readStream.on('data', (chunk: Buffer) => {
+      if (transferState.cancelled) {
+        readStream.destroy();
+        writeStream.destroy();
+        return;
+      }
+      transferred += chunk.length;
+      if (win) {
+        win.webContents.send(`sftp:progress:${transferId}`, {
+          bytes: transferred,
+          total,
+          percentage: Math.round((transferred / total) * 100),
+        });
+      }
+    });
+
+    readStream.pipe(writeStream);
+
+    // Return transferId immediately so frontend can set up progress listener
+    return transferId;
   });
 
   ipcMain.on('sftp:cancel', (_event, transferId: string) => {

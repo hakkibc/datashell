@@ -1,14 +1,15 @@
 import { useSessionStore } from '../../store/useSessionStore';
 import { SessionGroup } from './SessionGroup';
-import { ChevronRight, ChevronDown, Server, Folder } from 'lucide-react';
+import { ChevronRight, ChevronDown, Server, Folder, Edit2, Trash2, FolderOpen } from 'lucide-react';
 import type { Session } from '../../types/electron';
 
 interface Props {
   onConnect: (session: Session) => void;
   onEdit: (session: Session) => void;
+  onSftp?: (session: Session) => void;
 }
 
-export function SessionManager({ onConnect, onEdit }: Props) {
+export function SessionManager({ onConnect, onEdit, onSftp }: Props) {
   const { sessions, groups, searchQuery, toggleGroupExpand, deleteSession } = useSessionStore();
 
   const filteredSessions = searchQuery
@@ -68,6 +69,17 @@ export function SessionManager({ onConnect, onEdit }: Props) {
                 <Server size={14} />
                 <span className="session-item__name">{session.name}</span>
                 <span className="session-item__host">{session.host}</span>
+                <div className="session-item__actions">
+                  <button className="btn--icon" onClick={(e) => { e.stopPropagation(); onSftp?.(session); }} title="SFTP">
+                    <FolderOpen size={12} />
+                  </button>
+                  <button className="btn--icon" onClick={(e) => { e.stopPropagation(); onEdit(session); }} title="Düzenle">
+                    <Edit2 size={12} />
+                  </button>
+                  <button className="btn--icon" onClick={(e) => { e.stopPropagation(); if (confirm(`"${session.name}" silinsin mi?`)) deleteSession(session.id); }} title="Sil">
+                    <Trash2 size={12} />
+                  </button>
+                </div>
               </div>
             ))}
         </div>
@@ -93,6 +105,17 @@ export function SessionManager({ onConnect, onEdit }: Props) {
               <Server size={14} />
               <span className="session-item__name">{session.name}</span>
               <span className="session-item__host">{session.host}</span>
+              <div className="session-item__actions">
+                <button className="btn--icon" onClick={(e) => { e.stopPropagation(); onSftp?.(session); }} title="SFTP">
+                  <FolderOpen size={12} />
+                </button>
+                <button className="btn--icon" onClick={(e) => { e.stopPropagation(); onEdit(session); }} title="Düzenle">
+                  <Edit2 size={12} />
+                </button>
+                <button className="btn--icon" onClick={(e) => { e.stopPropagation(); if (confirm(`"${session.name}" silinsin mi?`)) deleteSession(session.id); }} title="Sil">
+                  <Trash2 size={12} />
+                </button>
+              </div>
             </div>
           ))}
         </div>

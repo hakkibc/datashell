@@ -3,6 +3,8 @@ import { Client, ClientChannel } from 'ssh2';
 import Store from 'electron-store';
 import fs from 'fs';
 import type { Session, AuthConfig } from './sessions';
+import { setSFTPClient } from './sftp';
+import { setTunnelClient, removeTunnelClient } from './tunnels';
 
 interface SSHConnection {
   client: Client;
@@ -214,6 +216,10 @@ export function registerSSHHandlers() {
 
       connections.set(connectionId, connection);
 
+      // Register client for SFTP and tunnel usage
+      setSFTPClient(connectionId, client);
+      setTunnelClient(connectionId, client);
+
       // Handle disconnect
       client.on('close', () => {
         const win = getMainWindow();
@@ -221,6 +227,7 @@ export function registerSSHHandlers() {
           win.webContents.send(`ssh:disconnected:${connectionId}`, 'Connection closed');
         }
         connections.delete(connectionId);
+        removeTunnelClient(connectionId);
         jumpClient?.end();
         stopKeepaliveIfEmpty();
       });
@@ -231,6 +238,7 @@ export function registerSSHHandlers() {
           win.webContents.send(`ssh:disconnected:${connectionId}`, err.message);
         }
         connections.delete(connectionId);
+        removeTunnelClient(connectionId);
         jumpClient?.end();
         stopKeepaliveIfEmpty();
       });

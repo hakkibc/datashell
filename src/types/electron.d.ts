@@ -32,12 +32,19 @@ export interface ElectronAPI {
     onProgress: (transferId: string, callback: (progress: TransferProgress) => void) => () => void;
   };
   tunnel: {
-    start: (connectionId: string, config: TunnelConfig) => Promise<string>;
+    start: (connectionId: string, config: TunnelConfig & { savedTunnelId?: string }) => Promise<string>;
     stop: (tunnelId: string) => Promise<void>;
     list: () => Promise<ActiveTunnel[]>;
     listForConnection: (connectionId: string) => Promise<ActiveTunnel[]>;
   };
+  savedTunnels: {
+    getAll: () => Promise<SavedTunnel[]>;
+    create: (data: Omit<SavedTunnel, 'id' | 'createdAt'>) => Promise<SavedTunnel>;
+    update: (id: string, data: Partial<SavedTunnel>) => Promise<SavedTunnel>;
+    delete: (id: string) => Promise<void>;
+  };
   local: {
+    homedir: () => Promise<string>;
     readdir: (dirPath: string) => Promise<FileEntry[]>;
     selectDirectory: () => Promise<string | null>;
     selectFile: () => Promise<string[]>;
@@ -115,6 +122,17 @@ export interface TransferProgress {
   bytes: number;
   total: number;
   percentage: number;
+}
+
+export interface SavedTunnel {
+  id: string;
+  name: string;
+  sessionId: string;
+  type: 'local' | 'remote' | 'dynamic';
+  localPort: number;
+  remoteHost?: string;
+  remotePort?: number;
+  createdAt: number;
 }
 
 export interface ActiveTunnel {

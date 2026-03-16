@@ -75,8 +75,8 @@ export function SessionForm({ session, onClose }: Props) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay">
+      <div className="modal">
         <div className="modal__header">
           <div className="modal__title">{isEdit ? 'Session Düzenle' : 'Yeni Session'}</div>
           <button className="btn--icon" onClick={onClose}>

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Sidebar } from './components/layout/Sidebar';
 import { TabBar } from './components/layout/TabBar';
 import { StatusBar } from './components/layout/StatusBar';
@@ -34,28 +34,49 @@ function TitleBar() {
 
 function App() {
   const { tabs, activeTabId } = useTabStore();
-  const activeTab = tabs.find((t) => t.id === activeTabId);
   const theme = useSettingsStore((s) => s.theme);
+  const [sidebarWidth, setSidebarWidth] = useState(240);
+  const dragging = useRef(false);
 
   useEffect(() => {
     const root = document.documentElement;
-    // Remove all theme classes
-    root.classList.remove('theme-light', 'theme-monokai', 'theme-solarized', 'theme-nord');
-    // Add the active theme class (dark has no class)
+    root.classList.remove('theme-light', 'theme-monokai', 'theme-solarized', 'theme-nord', 'theme-solarized-light', 'theme-github-light', 'theme-catppuccin-latte', 'theme-rose-pine-dawn');
     const cls = appThemeClass[theme];
     if (cls) root.classList.add(cls);
   }, [theme]);
+
+  const handleSidebarResize = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    dragging.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    const onMouseMove = (ev: MouseEvent) => {
+      if (!dragging.current) return;
+      setSidebarWidth(Math.max(160, Math.min(480, ev.clientX)));
+    };
+
+    const onMouseUp = () => {
+      dragging.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  }, []);
 
   return (
     <div className="app-container">
       <TitleBar />
       <div className="main-content">
-        <Sidebar />
+        <Sidebar style={{ width: sidebarWidth }} />
+        <div className="resize-handle resize-handle--vertical" onMouseDown={handleSidebarResize} />
         <div className="content-panel">
           <TabBar />
-          {activeTab ? (
-            <TerminalTab key={activeTab.id} tab={activeTab} />
-          ) : (
+          {tabs.length === 0 && (
             <div className="empty-state">
               <Terminal size={48} className="empty-state__icon" />
               <div className="empty-state__text">
@@ -66,6 +87,14 @@ function App() {
               </div>
             </div>
           )}
+          {tabs.map((tab) => (
+            <div
+              key={tab.id}
+              style={{ display: tab.id === activeTabId ? 'flex' : 'none', flex: 1, flexDirection: 'column', overflow: 'hidden' }}
+            >
+              <TerminalTab tab={tab} />
+            </div>
+          ))}
         </div>
       </div>
       <StatusBar />

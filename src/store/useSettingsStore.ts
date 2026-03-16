@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type ThemeName = 'dark' | 'light' | 'monokai' | 'solarized-dark' | 'nord';
+export type ThemeName = 'dark' | 'light' | 'monokai' | 'solarized-dark' | 'nord' | 'solarized-light' | 'github-light' | 'catppuccin-latte' | 'rose-pine-dawn';
 
 export interface TerminalTheme {
   background: string;
@@ -137,6 +137,94 @@ export const terminalThemes: Record<ThemeName, TerminalTheme> = {
     brightCyan: '#8fbcbb',
     brightWhite: '#eceff4',
   },
+  'solarized-light': {
+    background: '#fdf6e3',
+    foreground: '#657b83',
+    cursor: '#586e75',
+    selectionBackground: '#eee8d5',
+    black: '#073642',
+    red: '#dc322f',
+    green: '#859900',
+    yellow: '#b58900',
+    blue: '#268bd2',
+    magenta: '#d33682',
+    cyan: '#2aa198',
+    white: '#eee8d5',
+    brightBlack: '#002b36',
+    brightRed: '#cb4b16',
+    brightGreen: '#586e75',
+    brightYellow: '#657b83',
+    brightBlue: '#839496',
+    brightMagenta: '#6c71c4',
+    brightCyan: '#93a1a1',
+    brightWhite: '#fdf6e3',
+  },
+  'github-light': {
+    background: '#ffffff',
+    foreground: '#24292f',
+    cursor: '#044289',
+    selectionBackground: '#ddf4ff',
+    black: '#24292f',
+    red: '#cf222e',
+    green: '#116329',
+    yellow: '#4d2d00',
+    blue: '#0969da',
+    magenta: '#8250df',
+    cyan: '#1b7c83',
+    white: '#6e7781',
+    brightBlack: '#57606a',
+    brightRed: '#a40e26',
+    brightGreen: '#1a7f37',
+    brightYellow: '#633c01',
+    brightBlue: '#218bff',
+    brightMagenta: '#a475f9',
+    brightCyan: '#3192aa',
+    brightWhite: '#8c959f',
+  },
+  'catppuccin-latte': {
+    background: '#eff1f5',
+    foreground: '#4c4f69',
+    cursor: '#dc8a78',
+    selectionBackground: '#ccd0da',
+    black: '#5c5f77',
+    red: '#d20f39',
+    green: '#40a02b',
+    yellow: '#df8e1d',
+    blue: '#1e66f5',
+    magenta: '#8839ef',
+    cyan: '#179299',
+    white: '#acb0be',
+    brightBlack: '#6c6f85',
+    brightRed: '#d20f39',
+    brightGreen: '#40a02b',
+    brightYellow: '#df8e1d',
+    brightBlue: '#1e66f5',
+    brightMagenta: '#8839ef',
+    brightCyan: '#179299',
+    brightWhite: '#bcc0cc',
+  },
+  'rose-pine-dawn': {
+    background: '#faf4ed',
+    foreground: '#575279',
+    cursor: '#cecacd',
+    selectionBackground: '#dfdad9',
+    black: '#f2e9e1',
+    red: '#b4637a',
+    green: '#286983',
+    yellow: '#ea9d34',
+    blue: '#56949f',
+    magenta: '#907aa9',
+    cyan: '#d7827e',
+    white: '#575279',
+    brightBlack: '#9893a5',
+    brightRed: '#b4637a',
+    brightGreen: '#286983',
+    brightYellow: '#ea9d34',
+    brightBlue: '#56949f',
+    brightMagenta: '#907aa9',
+    brightCyan: '#d7827e',
+    brightWhite: '#575279',
+  },
 };
 
 // Which app theme (CSS) to use per terminal theme
@@ -146,6 +234,10 @@ export const appThemeClass: Record<ThemeName, string> = {
   monokai: 'theme-monokai',
   'solarized-dark': 'theme-solarized',
   nord: 'theme-nord',
+  'solarized-light': 'theme-solarized-light',
+  'github-light': 'theme-github-light',
+  'catppuccin-latte': 'theme-catppuccin-latte',
+  'rose-pine-dawn': 'theme-rose-pine-dawn',
 };
 
 export const themeLabels: Record<ThemeName, string> = {
@@ -154,15 +246,23 @@ export const themeLabels: Record<ThemeName, string> = {
   monokai: 'Monokai',
   'solarized-dark': 'Solarized Dark',
   nord: 'Nord',
+  'solarized-light': 'Solarized Light',
+  'github-light': 'GitHub Light',
+  'catppuccin-latte': 'Catppuccin Latte',
+  'rose-pine-dawn': 'Rose Pine Dawn',
 };
+
+export type PasteMethod = 'right-click' | 'middle-click' | 'ctrl-v';
 
 interface SettingsState {
   theme: ThemeName;
   copyOnSelect: boolean;
+  pasteMethod: PasteMethod;
   fontSize: number;
   fontFamily: string;
   setTheme: (theme: ThemeName) => void;
   setCopyOnSelect: (value: boolean) => void;
+  setPasteMethod: (method: PasteMethod) => void;
   setFontSize: (size: number) => void;
   setFontFamily: (family: string) => void;
 }
@@ -172,10 +272,12 @@ export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       theme: 'dark',
       copyOnSelect: false,
+      pasteMethod: 'right-click' as PasteMethod,
       fontSize: 14,
       fontFamily: "'Cascadia Code', 'Consolas', monospace",
       setTheme: (theme) => set({ theme }),
       setCopyOnSelect: (copyOnSelect) => set({ copyOnSelect }),
+      setPasteMethod: (pasteMethod) => set({ pasteMethod }),
       setFontSize: (fontSize) => set({ fontSize }),
       setFontFamily: (fontFamily) => set({ fontFamily }),
     }),

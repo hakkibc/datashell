@@ -13,6 +13,7 @@ export interface Tab {
   status: TabStatus;
   color?: string;
   errorMessage?: string;
+  autoSftp?: boolean;
 }
 
 interface TabState {

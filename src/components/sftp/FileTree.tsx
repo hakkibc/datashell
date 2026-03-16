@@ -9,11 +9,13 @@ interface Props {
   sftpId?: string;
   selectedFile: string | null;
   onSelect: (name: string | null) => void;
+  onDropFile?: (fileName: string, sourcePath: string, sourceType: 'local' | 'remote') => void;
 }
 
-export function FileTree({ type, path, onNavigate, sftpId, selectedFile, onSelect }: Props) {
+export function FileTree({ type, path, onNavigate, sftpId, selectedFile, onSelect, onDropFile }: Props) {
   const [entries, setEntries] = useState<FileEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
 
   useEffect(() => {
     loadDirectory();
@@ -58,6 +60,33 @@ export function FileTree({ type, path, onNavigate, sftpId, selectedFile, onSelec
     }
   };
 
+  const handleDragStart = (e: React.DragEvent, entry: FileEntry) => {
+    if (entry.isDirectory) return;
+    e.dataTransfer.setData('application/json', JSON.stringify({
+      fileName: entry.name,
+      sourcePath: path,
+      sourceType: type,
+    }));
+    e.dataTransfer.effectAllowed = 'copy';
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      if (data.sourceType !== type && onDropFile) {
+        onDropFile(data.fileName, data.sourcePath, data.sourceType);
+      }
+    } catch { /* ignore */ }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    setDragOver(true);
+  };
+
   const formatSize = (size: number) => {
     if (size < 1024) return `${size} B`;
     if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
@@ -75,17 +104,20 @@ export function FileTree({ type, path, onNavigate, sftpId, selectedFile, onSelec
   }
 
   return (
-    <div style={{ fontSize: 12 }}>
+    <div
+      style={{ fontSize: 12, minHeight: '100%' }}
+      onDrop={handleDrop}
+      onDragOver={handleDragOver}
+      onDragLeave={() => setDragOver(false)}
+      className={dragOver ? 'sftp-drop-target' : ''}
+    >
       {/* Column headers */}
       <div className="sftp-row sftp-row--header">
         <span style={{ flex: 1 }}>Ad</span>
         <span style={{ width: 80, textAlign: 'right' }}>Boyut</span>
         <span style={{ width: 120, textAlign: 'right' }}>Değiştirilme</span>
       </div>
-      <div
-        className="sftp-row"
-        onDoubleClick={navigateUp}
-      >
+      <div className="sftp-row" onDoubleClick={navigateUp}>
         <ArrowUp size={13} />
         <span style={{ flex: 1 }}>..</span>
         <span style={{ width: 80 }} />
@@ -97,6 +129,8 @@ export function FileTree({ type, path, onNavigate, sftpId, selectedFile, onSelec
           className={`sftp-row ${selectedFile === entry.name ? 'sftp-row--selected' : ''}`}
           onClick={() => onSelect(entry.name)}
           onDoubleClick={() => handleDoubleClick(entry)}
+          draggable={!entry.isDirectory}
+          onDragStart={(e) => handleDragStart(e, entry)}
         >
           {entry.isDirectory ? <Folder size={13} color="var(--accent)" /> : <File size={13} />}
           <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.name}</span>

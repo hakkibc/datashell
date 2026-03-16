@@ -3,6 +3,7 @@ import path from 'path';
 import { registerSessionHandlers } from './ipc/sessions';
 import { registerSSHHandlers } from './ipc/ssh';
 import { registerSFTPHandlers } from './ipc/sftp';
+import { registerTunnelHandlers } from './ipc/tunnels';
 
 // ssh2 native modül olmadan da çalışsın
 process.env.NODE_SSH2_NO_NATIVE = '1';
@@ -71,6 +72,7 @@ function createWindow() {
 registerSessionHandlers();
 registerSSHHandlers();
 registerSFTPHandlers();
+registerTunnelHandlers();
 
 app.whenReady().then(createWindow);
 

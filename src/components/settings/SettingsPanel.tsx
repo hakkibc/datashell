@@ -5,6 +5,7 @@ import {
   themeLabels,
   terminalThemes,
   type ThemeName,
+  type PasteMethod,
 } from '../../store/useSettingsStore';
 
 interface Props {
@@ -23,7 +24,7 @@ export function SettingsPanel({ onClose }: Props) {
   ];
 
   return (
-    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="modal-overlay">
       <div className="modal" style={{ minWidth: 520, maxWidth: 600 }}>
         <div className="modal__header">
           <div className="modal__title">Ayarlar</div>
@@ -89,7 +90,7 @@ function AppearanceSettings() {
 }
 
 function TerminalSettings() {
-  const { copyOnSelect, setCopyOnSelect, fontSize, setFontSize, fontFamily, setFontFamily } =
+  const { copyOnSelect, setCopyOnSelect, pasteMethod, setPasteMethod, fontSize, setFontSize, fontFamily, setFontFamily } =
     useSettingsStore();
 
   return (
@@ -143,6 +144,27 @@ function TerminalSettings() {
           </span>
         </label>
       </div>
+
+      <div className="form-group">
+        <label className="form-label">Yapistirma Yontemi</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {([
+            { value: 'right-click' as PasteMethod, label: 'Sag Tik (Varsayilan)' },
+            { value: 'middle-click' as PasteMethod, label: 'Orta Tik (Mouse Tekerlek)' },
+            { value: 'ctrl-v' as PasteMethod, label: 'Ctrl + V' },
+          ]).map((opt) => (
+            <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12 }}>
+              <input
+                type="radio"
+                name="pasteMethod"
+                checked={pasteMethod === opt.value}
+                onChange={() => setPasteMethod(opt.value)}
+              />
+              {opt.label}
+            </label>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -153,7 +175,7 @@ function AboutSection() {
       <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--accent)', marginBottom: 4 }}>
         DataShell
       </div>
-      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>v1.1.0</div>
+      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>v1.4.0</div>
       <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
         Portable SSH istemcisi
         <br />

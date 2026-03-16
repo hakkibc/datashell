@@ -24,8 +24,8 @@ export function TunnelForm({ onSubmit, onClose }: Props) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" style={{ minWidth: 360 }} onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay">
+      <div className="modal" style={{ minWidth: 360 }}>
         <div className="modal__header">
           <div className="modal__title">Yeni Tunnel</div>
           <button className="btn--icon" onClick={onClose}><X size={18} /></button>
