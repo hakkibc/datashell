@@ -37,6 +37,12 @@ export interface ElectronAPI {
     list: () => Promise<ActiveTunnel[]>;
     listForConnection: (connectionId: string) => Promise<ActiveTunnel[]>;
   };
+  local: {
+    readdir: (dirPath: string) => Promise<FileEntry[]>;
+    selectDirectory: () => Promise<string | null>;
+    selectFile: () => Promise<string[]>;
+    selectSavePath: (defaultName: string) => Promise<string | null>;
+  };
   window: {
     minimize: () => void;
     maximize: () => void;

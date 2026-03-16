@@ -55,6 +55,17 @@ export function TerminalPane({ tab }: Props) {
       }
     });
 
+    // Right-click paste
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      navigator.clipboard.readText().then((text) => {
+        if (text && tab.connectionId) {
+          window.electronAPI?.ssh.sendInput(tab.connectionId, text);
+        }
+      }).catch(() => {});
+    };
+    containerRef.current.addEventListener('contextmenu', handleContextMenu);
+
     // Resize observer
     const resizeObserver = new ResizeObserver(() => {
       try {
@@ -131,7 +142,9 @@ export function TerminalPane({ tab }: Props) {
       try { fitAddon.fit(); } catch { /* ignore */ }
     });
 
+    const containerEl = containerRef.current;
     return () => {
+      containerEl?.removeEventListener('contextmenu', handleContextMenu);
       resizeObserver.disconnect();
       selectionDisposable.dispose();
       unsubSettings();

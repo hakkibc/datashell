@@ -47,7 +47,7 @@ export function Sidebar() {
       <div className={`sidebar ${collapsed ? 'sidebar--collapsed' : ''}`}>
         <div className="sidebar__header">
           <span className="sidebar__logo">DataShell</span>
-          <span className="sidebar__version">v1.0.0</span>
+          <span className="sidebar__version">v1.1.0</span>
           <div style={{ flex: 1 }} />
           <button className="btn--icon" onClick={() => setCollapsed(true)}>
             <ChevronLeft size={16} />

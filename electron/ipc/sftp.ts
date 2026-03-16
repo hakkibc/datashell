@@ -29,6 +29,65 @@ export function setSFTPClient(connectionId: string, client: Client) {
 }
 
 export function registerSFTPHandlers() {
+  // Local filesystem listing
+  ipcMain.handle('local:readdir', async (_event, dirPath: string) => {
+    try {
+      const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+      const result = [];
+      for (const entry of entries) {
+        try {
+          const fullPath = path.join(dirPath, entry.name);
+          const stats = fs.statSync(fullPath);
+          result.push({
+            name: entry.name,
+            longname: '',
+            attrs: {
+              size: stats.size,
+              mode: stats.mode,
+              mtime: Math.floor(stats.mtimeMs / 1000),
+              atime: Math.floor(stats.atimeMs / 1000),
+              uid: 0,
+              gid: 0,
+            },
+            isDirectory: entry.isDirectory(),
+            isSymlink: entry.isSymbolicLink(),
+          });
+        } catch {
+          // Skip files we can't stat (permission errors, etc.)
+        }
+      }
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  });
+
+  // Select local directory via dialog
+  ipcMain.handle('local:selectDirectory', async () => {
+    const { dialog } = require('electron');
+    const result = await dialog.showOpenDialog({
+      properties: ['openDirectory'],
+    });
+    return result.canceled ? null : result.filePaths[0];
+  });
+
+  // Select local file for upload via dialog
+  ipcMain.handle('local:selectFile', async () => {
+    const { dialog } = require('electron');
+    const result = await dialog.showOpenDialog({
+      properties: ['openFile', 'multiSelections'],
+    });
+    return result.canceled ? [] : result.filePaths;
+  });
+
+  // Select save path for download
+  ipcMain.handle('local:selectSavePath', async (_event, defaultName: string) => {
+    const { dialog } = require('electron');
+    const result = await dialog.showSaveDialog({
+      defaultPath: defaultName,
+    });
+    return result.canceled ? null : result.filePath;
+  });
   ipcMain.handle('sftp:open', async (_event, connectionId: string) => {
     const client = clientPool.get(connectionId);
     if (!client) throw new Error(`No SSH connection found: ${connectionId}`);

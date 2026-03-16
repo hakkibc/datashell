@@ -7,9 +7,11 @@ interface Props {
   path: string;
   onNavigate: (path: string) => void;
   sftpId?: string;
+  selectedFile: string | null;
+  onSelect: (name: string | null) => void;
 }
 
-export function FileTree({ type, path, onNavigate, sftpId }: Props) {
+export function FileTree({ type, path, onNavigate, sftpId, selectedFile, onSelect }: Props) {
   const [entries, setEntries] = useState<FileEntry[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -19,14 +21,18 @@ export function FileTree({ type, path, onNavigate, sftpId }: Props) {
 
   const loadDirectory = async () => {
     setLoading(true);
+    onSelect(null);
     try {
       if (type === 'remote' && sftpId) {
         const files = await window.electronAPI.sftp.readdir(sftpId, path);
         setEntries(files);
+      } else if (type === 'local') {
+        const files = await window.electronAPI.local.readdir(path);
+        setEntries(files);
       }
-      // Local file listing would use a separate IPC handler
     } catch (err) {
       console.error('Failed to load directory:', err);
+      setEntries([]);
     } finally {
       setLoading(false);
     }
@@ -59,31 +65,46 @@ export function FileTree({ type, path, onNavigate, sftpId }: Props) {
     return `${(size / (1024 * 1024 * 1024)).toFixed(1)} GB`;
   };
 
+  const formatDate = (timestamp: number) => {
+    const d = new Date(timestamp * 1000);
+    return d.toLocaleDateString('tr-TR') + ' ' + d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+  };
+
   if (loading) {
     return <div style={{ padding: 8, color: 'var(--text-muted)', fontSize: 12 }}>Yükleniyor...</div>;
   }
 
   return (
     <div style={{ fontSize: 12 }}>
+      {/* Column headers */}
+      <div className="sftp-row sftp-row--header">
+        <span style={{ flex: 1 }}>Ad</span>
+        <span style={{ width: 80, textAlign: 'right' }}>Boyut</span>
+        <span style={{ width: 120, textAlign: 'right' }}>Değiştirilme</span>
+      </div>
       <div
-        className="session-item"
-        style={{ padding: '3px 8px' }}
+        className="sftp-row"
         onDoubleClick={navigateUp}
       >
         <ArrowUp size={13} />
-        <span>..</span>
+        <span style={{ flex: 1 }}>..</span>
+        <span style={{ width: 80 }} />
+        <span style={{ width: 120 }} />
       </div>
       {sortedEntries.map((entry) => (
         <div
           key={entry.name}
-          className="session-item"
-          style={{ padding: '3px 8px' }}
+          className={`sftp-row ${selectedFile === entry.name ? 'sftp-row--selected' : ''}`}
+          onClick={() => onSelect(entry.name)}
           onDoubleClick={() => handleDoubleClick(entry)}
         >
           {entry.isDirectory ? <Folder size={13} color="var(--accent)" /> : <File size={13} />}
-          <span style={{ flex: 1 }}>{entry.name}</span>
-          <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>
+          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.name}</span>
+          <span style={{ width: 80, textAlign: 'right', color: 'var(--text-muted)' }}>
             {!entry.isDirectory && formatSize(entry.attrs.size)}
+          </span>
+          <span style={{ width: 120, textAlign: 'right', color: 'var(--text-muted)' }}>
+            {formatDate(entry.attrs.mtime)}
           </span>
         </div>
       ))}

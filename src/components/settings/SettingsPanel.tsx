@@ -153,7 +153,7 @@ function AboutSection() {
       <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--accent)', marginBottom: 4 }}>
         DataShell
       </div>
-      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>v1.0.0</div>
+      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>v1.1.0</div>
       <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
         Portable SSH istemcisi
         <br />

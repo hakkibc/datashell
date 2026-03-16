@@ -80,6 +80,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('tunnel:listForConnection', connectionId),
   },
 
+  // Local filesystem
+  local: {
+    readdir: (dirPath: string) => ipcRenderer.invoke('local:readdir', dirPath),
+    selectDirectory: () => ipcRenderer.invoke('local:selectDirectory'),
+    selectFile: () => ipcRenderer.invoke('local:selectFile'),
+    selectSavePath: (defaultName: string) => ipcRenderer.invoke('local:selectSavePath', defaultName),
+  },
+
   // Window controls
   window: {
     minimize: () => ipcRenderer.send('window:minimize'),

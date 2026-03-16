@@ -815,3 +815,234 @@ body,
   font-size: 11px;
   color: var(--text-muted);
 }
+
+/* ===== Terminal Toolbar ===== */
+.terminal-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.terminal-toolbar__btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.15s;
+}
+
+.terminal-toolbar__btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.terminal-toolbar__btn--active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.terminal-toolbar__btn--active:hover {
+  background: var(--accent-hover);
+}
+
+.terminal-toolbar__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== SFTP Panel ===== */
+.sftp-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-primary);
+}
+
+.sftp-panes {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sftp-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sftp-pane:first-child {
+  border-right: 1px solid var(--border);
+}
+
+.sftp-pane__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sftp-pane__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.sftp-pane__path {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sftp-pane__path input {
+  width: 100%;
+}
+
+.sftp-pane__content {
+  flex: 1;
+  overflow: auto;
+}
+
+/* SFTP Action buttons between panes */
+.sftp-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 4px;
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* SFTP file rows */
+.sftp-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: background 0.1s;
+  font-size: 12px;
+}
+
+.sftp-row:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.sftp-row--selected {
+  background: var(--accent);
+  color: white;
+}
+
+.sftp-row--selected:hover {
+  background: var(--accent-hover);
+}
+
+.sftp-row--header {
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  cursor: default;
+  padding: 4px 8px;
+}
+
+.sftp-row--header:hover {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+/* SFTP Transfers */
+.sftp-transfers {
+  border-top: 1px solid var(--border);
+  max-height: 160px;
+  overflow-y: auto;
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+
+.sftp-transfer__header {
+  display: grid;
+  grid-template-columns: 1.5fr 0.8fr 1.2fr 1fr 0.7fr 0.6fr 40px;
+  gap: 8px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.sftp-transfer__row {
+  display: grid;
+  grid-template-columns: 1.5fr 0.8fr 1.2fr 1fr 0.7fr 0.6fr 40px;
+  gap: 8px;
+  padding: 4px 8px;
+  font-size: 11px;
+  align-items: center;
+  color: var(--text-secondary);
+}
+
+.sftp-transfer__row:hover {
+  background: var(--bg-tertiary);
+}
+
+.sftp-transfer__name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sftp-transfer__status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sftp-transfer__progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sftp-transfer__size,
+.sftp-transfer__speed,
+.sftp-transfer__time {
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.sftp-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-primary);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.sftp-progress-bar__fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+}

@@ -36,7 +36,7 @@ export function StatusBar() {
         <div className="statusbar__item">Hazır</div>
       )}
       <div style={{ flex: 1 }} />
-      <div className="statusbar__item">DataShell v1.0.0</div>
+      <div className="statusbar__item">DataShell v1.1.0</div>
     </div>
   );
 }
