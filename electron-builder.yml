@@ -1,0 +1,30 @@
+appId: com.datashell.app
+productName: DataShell
+copyright: "DataShell"
+
+directories:
+  output: release
+  buildResources: assets
+
+files:
+  - dist/**
+  - dist-electron/**
+  - node_modules/**
+  - package.json
+
+npmRebuild: true
+buildDependenciesFromSource: false
+
+# Sadece klasör çıktısı — installer yok, admin yetki istemiyor
+win:
+  target:
+    - target: dir
+  artifactName: "DataShell-${version}-${arch}.${ext}"
+  requestedExecutionLevel: asInvoker
+  signAndEditExecutable: false
+  sign: false
+
+# Code signing devre dışı (portable build, imza gerekmez)
+forceCodeSigning: false
+
+asar: true
